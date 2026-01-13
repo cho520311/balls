@@ -3,66 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>新竹魚丸採購系統</title>
+    <title>魚丸團購系統</title>
     <style>
-        :root { --primary: #2e59a7; --secondary: #f39c12; --danger: #ff4d4d; }
         body { font-family: sans-serif; background: #f0f2f5; padding: 10px; margin: 0; }
-        .card, .summary-card { 
-            width: 100%; max-width: 600px; margin: 0 auto 15px auto; 
-            background: white; padding: 15px; border-radius: 12px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1); box-sizing: border-box; 
-        }
-        h2, h3 { text-align: center; color: var(--primary); margin: 10px 0; }
-        .item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .card, .summary-card { width: 100%; max-width: 600px; margin: 0 auto 15px auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); box-sizing: border-box; }
+        h2, h3 { text-align: center; color: #2e59a7; margin: 10px 0; }
+        .item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
         select { padding: 8px; border-radius: 6px; font-size: 16px; width: 80px; }
         input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; margin-bottom: 10px; }
-        .btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        
-        /* 店家統計區 (對應試算表 D, E 欄) */
-        .summary-card { background: #fff3e0; border: 2px solid var(--secondary); }
+        .btn { width: 100%; padding: 15px; background: #2e59a7; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .summary-card { background: #fff3e0; border: 2px solid #f39c12; }
         .summary-item { display: flex; justify-content: space-between; padding: 8px 0; font-weight: bold; color: #e67e22; border-bottom: 1px dashed #ffe0b2; }
-        .grand-total { font-size: 20px; color: #d9534f; border: none; margin-top: 10px; }
-
-        /* 表格優化 */
+        .grand-total { font-size: 20px; color: #d9534f; border: none; padding-top: 10px; }
         .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 400px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 450px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background: #f8f9fa; }
-        .del-btn { background: var(--danger); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
-
-        @media (max-width: 480px) {
-            .item span { font-size: 14px; }
-            select { width: 70px; }
-        }
+        .del-btn { background: #ff4d4d; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>🚍 新竹魚丸採購</h2>
+    <h2>🚍 魚丸採購登記</h2>
     <input type="text" id="userName" placeholder="請輸入姓名">
     <div id="productArea"></div>
     <h3 style="text-align:right; color:#d9534f;">小計: <span id="displayTotal">0</span> 元</h3>
-    <button class="btn" onclick="submitOrder()" id="sendBtn">送出訂單</button>
+    <button class="btn" onclick="submitOrder()" id="sendBtn">確認送出</button>
 </div>
 
-<div class="summary-card" id="summarySection">
-    <h3>🏪 店家叫貨總單統計</h3>
+<div class="summary-card">
+    <h3>🏪 店家叫貨總單</h3>
     <div id="shopSummary">載入中...</div>
 </div>
 
 <div class="card">
-    <h3>📊 即時訂單明細</h3>
+    <h3>📊 訂單明細</h3>
     <div class="table-container">
         <table>
-            <thead><tr><th>姓名</th><th>內容</th><th>時間</th><th>管理</th></tr></thead>
+            <thead><tr><th>姓名</th><th>內容</th><th>時間</th><th>操作</th></tr></thead>
             <tbody id="detailTable"></tbody>
         </table>
     </div>
 </div>
 
 <script>
-    const gasUrl = 'https://script.google.com/macros/s/AKfycbzp7xdkxJ3lyz2VgrorsYGNu2R_voxrstAQXov8afr3hUxS_-uCjnJPL9v3QBTCCs8gTQ/exec'; // 👈 替換為部署後的網址
+    const gasUrl = 'https://script.google.com/macros/s/AKfycby5mRI-XHMU5ecn9t8nRBtyMPRPj321SgY-Vemi4-sLVr-85gEUhaUC8eXof0a1uVvxmQ/exec'; // 👈 替換這裡
 
     const products = [
         { name: "包餡魚丸", price: 170 }, { name: "無包餡魚丸", price: 150 },
@@ -70,16 +55,15 @@
         { name: "福州燕丸", price: 220 }, { name: "鮮蔥貢丸", price: 220 }
     ];
 
-    // 生成選單
     const area = document.getElementById('productArea');
     products.forEach((p, i) => {
         let opt = '';
         for(let j=0; j<=10; j++) opt += `<option value="${j}">${j}</option>`;
         area.innerHTML += `<div class="item"><span>${p.name} (${p.price}元)</span>
-            <select class="qty" data-idx="${i}" onchange="calc()">${opt}</select></div>`;
+            <select class="qty" data-idx="${i}" onchange="calcTotal()">${opt}</select></div>`;
     });
 
-    function calc() {
+    function calcTotal() {
         let t = 0;
         document.querySelectorAll('.qty').forEach(s => t += s.value * products[s.dataset.idx].price);
         document.getElementById('displayTotal').innerText = t;
@@ -89,8 +73,6 @@
         try {
             const res = await fetch(gasUrl);
             const data = await res.json();
-            
-            // 1. 顯示明細
             const table = document.getElementById('detailTable');
             table.innerHTML = '';
             data.orders.slice().reverse().forEach(row => {
@@ -100,19 +82,14 @@
                 </tr>`;
             });
 
-            // 2. 顯示試算表 D, E 欄統計
             const summary = document.getElementById('shopSummary');
             summary.innerHTML = '';
             data.summary.forEach(row => {
-                let label = row[0];
-                let value = row[1];
-                let isTotal = label.includes("總金額");
+                const isTotal = row[0].includes("金額");
                 summary.innerHTML += `<div class="summary-item ${isTotal ? 'grand-total' : ''}">
-                    <span>${label}</span>
-                    <span>${value} ${isTotal ? '元' : '斤'}</span>
-                </div>`;
+                    <span>${row[0]}</span><span>${row[1]} ${isTotal ? '元' : '斤'}</span></div>`;
             });
-        } catch(e) { document.getElementById('shopSummary').innerText = "讀取失敗，請更新 GAS 部署版本。"; }
+        } catch(e) { document.getElementById('shopSummary').innerText = "資料讀取失敗"; }
     }
 
     async function submitOrder() {
@@ -120,10 +97,7 @@
         if(!name) return alert("請輸入姓名");
         let d = [], t = 0;
         document.querySelectorAll('.qty').forEach(s => {
-            if(s.value > 0) {
-                d.push(`${products[s.dataset.idx].name}x${s.value}`);
-                t += s.value * products[s.dataset.idx].price;
-            }
+            if(s.value > 0) { d.push(`${products[s.dataset.idx].name}x${s.value}`); t += s.value * products[s.dataset.idx].price; }
         });
         if(t === 0) return alert("請選擇數量");
         
@@ -134,10 +108,15 @@
     }
 
     async function deleteOrder(name, time) {
-        if(!confirm("確定刪除？")) return;
-        await fetch(gasUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "delete", name, timestamp: time }) });
-        alert("已刪除");
-        location.reload();
+        if(!confirm("確定刪除此訂單？")) return;
+        // 刪除請求必須包含 action: "delete"
+        await fetch(gasUrl, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify({ action: "delete", name: name, timestamp: time }) 
+        });
+        alert("已發送刪除請求，請重新整理頁面。");
+        setTimeout(() => location.reload(), 1000); // 延遲一下確保 GAS 執行完畢
     }
 
     window.onload = loadData;
