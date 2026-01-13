@@ -5,66 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>石家魚丸團購</title>
     <style>
-        body { font-family: sans-serif; background: #fdf2f2; padding: 20px; }
-        .card { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .item { display: flex; justify-content: space-between; margin: 10px 0; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        body { font-family: sans-serif; background: #fdf2f2; padding: 15px; }
+        .card { max-width: 450px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .item { display: flex; justify-content: space-between; margin: 12px 0; border-bottom: 1px solid #eee; padding-bottom: 8px; align-items: center; }
         .btn { width: 100%; padding: 15px; background: #d93025; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; }
-        .result-table { width: 100%; max-width: 600px; margin: 20px auto; background: white; border-collapse: collapse; font-size: 14px; }
-        .result-table th, .result-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .result-table th { background-color: #f8f8f8; }
+        .list-area { max-width: 600px; margin: 25px auto; background: white; border-radius: 8px; overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #f8f8f8; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2 style="text-align:center;color:#d93025;">🍢 石家魚丸團購</h2>
-    <input type="text" id="name" placeholder="輸入姓名" style="width:90%; padding:10px; margin-bottom:15px;">
-    <div id="itemList">
-        <div class="item"><span>包餡魚丸 (170元)</span><select class="qty" data-name="包餡魚丸" data-price="170"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></div>
-        <div class="item"><span>無包餡魚丸 (150元)</span><select class="qty" data-name="無包餡魚丸" data-price="150"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></div>
-        <div class="item"><span>原味貢丸 (190元)</span><select class="qty" data-name="原味貢丸" data-price="190"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></div>
-        <div class="item"><span>香菇貢丸 (190元)</span><select class="qty" data-name="香菇貢丸" data-price="190"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></div>
-        <div class="item"><span>福州燕丸 (220元)</span><select class="qty" data-name="福州燕丸" data-price="220"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></div>
-        <div class="item"><span>鮮蔥貢丸 (190元)</span><select class="qty" data-name="鮮蔥貢丸" data-price="190"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></div>
+    <h2 style="text-align:center; color:#d93025;">🍢 石家魚丸團購登記</h2>
+    <input type="text" id="name" placeholder="請輸入姓名" style="width:92%; padding:10px; margin-bottom:15px; border:1px solid #ccc; border-radius:5px;">
+    
+    <div id="items">
+        <div class="item"><span>包餡魚丸 (170元)</span><select class="qty" data-name="包餡魚丸" data-price="170"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+        <div class="item"><span>無包餡魚丸 (150元)</span><select class="qty" data-name="無包餡魚丸" data-price="150"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+        <div class="item"><span>原味貢丸 (190元)</span><select class="qty" data-name="原味貢丸" data-price="190"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+        <div class="item"><span>香菇貢丸 (190元)</span><select class="qty" data-name="香菇貢丸" data-price="190"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+        <div class="item"><span>福州燕丸 (220元)</span><select class="qty" data-name="福州燕丸" data-price="220"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+        <div class="item"><span>鮮蔥貢丸 (190元)</span><select class="qty" data-name="鮮蔥貢丸" data-price="190"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
     </div>
-    <button class="btn" id="sBtn" onclick="send()">送出訂單</button>
+    
+    <button class="btn" id="sBtn" onclick="send()">確認送出訂單</button>
 </div>
 
-<h3 style="text-align:center; margin-top:30px;">📋 已登記同學名單</h3>
-<table class="result-table" id="resTable">
-    <thead><tr><th>姓名</th><th>訂單</th><th>金額</th><th>時間</th></tr></thead>
-    <tbody id="resBody"><tr><td colspan="4" style="text-align:center;">讀取中...</td></tr></tbody>
-</table>
+<div class="list-area">
+    <h3 style="text-align:center;">📋 已登記同學名單</h3>
+    <table id="resTable">
+        <thead><tr><th>姓名</th><th>訂單</th><th>金額</th><th>時間</th></tr></thead>
+        <tbody id="resBody"></tbody>
+    </table>
+</div>
 
 <script>
-    const gasUrl = 'https://script.google.com/macros/s/AKfycby9oouYgrA15UdUPG7FVr27DsqImCT2RXZHFchR2fddLebpLJxEXPHAsPeQjxvdBZaikw/exec'; // 👈 貼上新的部署網址
+    const gasUrl = 'https://script.google.com/macros/s/AKfycbyjXhH9WUR3tD_CXkgg1u5aw3t_8zI0GfEs1FHWepxfv0NCLgWeEbShx3qYFnheEzxbcg/exec';
 
     async function send() {
         const n = document.getElementById('name').value;
-        if (!n) return alert("請輸入姓名");
+        if (!n) return alert("請填寫姓名");
         let d = [], t = 0;
         document.querySelectorAll('.qty').forEach(s => {
             if (s.value > 0) { d.push(`${s.dataset.name}x${s.value}`); t += s.value * s.dataset.price; }
         });
         if (t === 0) return alert("請選購品項");
+        
         document.getElementById('sBtn').disabled = true;
         await fetch(gasUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({name: n, orderString: d.join(', '), total: t}) });
         alert("🎉 訂購成功！");
         location.reload();
     }
 
-    async function loadList() {
-        try {
-            const r = await fetch(gasUrl);
-            const data = await r.json();
-            let h = "";
-            data.reverse().forEach(row => {
-                h += `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td></tr>`;
-            });
-            document.getElementById('resBody').innerHTML = h || '<tr><td colspan="4" style="text-align:center;">尚無資料</td></tr>';
-        } catch(e) { document.getElementById('resBody').innerHTML = '<tr><td colspan="4" style="text-align:center;">讀取失敗</td></tr>'; }
+    async function load() {
+        const r = await fetch(gasUrl);
+        const data = await r.json();
+        let h = "";
+        data.reverse().forEach(row => {
+            // 只顯示 A, B, C, F 欄的資料
+            h += `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td><td>${row[5] || ''}</td></tr>`;
+        });
+        document.getElementById('resBody').innerHTML = h || '<tr><td colspan="4">尚無資料</td></tr>';
     }
-    loadList();
+    load();
 </script>
 </body>
 </html>
