@@ -3,46 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>團購統計系統 V3.0</title>
+    <title>魚丸團購系統</title>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f4f7f9; padding: 20px; display: flex; justify-content: center; }
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; display: flex; justify-content: center; }
         .card { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #1a73e8; margin-top: 0; }
-        .item { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px; align-items: center; }
-        select { padding: 8px; border-radius: 5px; border: 1px solid #ddd; }
-        .btn { width: 100%; padding: 15px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-        /* 統計區樣式 */
-        .stat-box { background: #eef2ff; border: 2px solid #4f46e5; padding: 15px; border-radius: 10px; margin-top: 15px; }
-        .stat-line { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #c7d2fe; font-size: 18px; }
-        .total-price { font-size: 26px; color: #dc2626; font-weight: bold; text-align: center; margin-top: 20px; }
+        .item { display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #eee; align-items: center; }
+        .btn { width: 100%; padding: 15px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; margin-top: 10px; }
+        .stat-line { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #cce0ff; font-size: 18px; }
+        .total-price { font-size: 24px; color: #d93025; font-weight: bold; text-align: center; margin-top: 20px; }
     </style>
 </head>
 <body>
 
 <div class="card" id="userArea">
-    <h2>🚍 魚丸團購登記表</h2>
-    <div style="margin-bottom: 15px;">
-        <label><b>姓名：</b></label>
-        <input type="text" id="name" style="width:90%; padding:10px; margin-top:5px;" placeholder="請輸入大名">
-    </div>
+    <h2 style="text-align:center;">🚍 訂購登記表</h2>
+    <input type="text" id="name" style="width:90%; padding:10px; margin-bottom:15px;" placeholder="請輸入姓名">
     <div id="itemList">
-        <div class="item"><span>包餡魚丸 (170元)</span><select class="qty" data-name="包餡魚丸" data-price="170"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
-        <div class="item"><span>無包餡魚丸 (150元)</span><select class="qty" data-name="無包餡魚丸" data-price="150"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
-        <div class="item"><span>原味貢丸 (190元)</span><select class="qty" data-name="原味貢丸" data-price="190"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
-        <div class="item"><span>福州燕丸 (220元)</span><select class="qty" data-name="福州燕丸" data-price="220"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
+        <div class="item"><span>包餡魚丸 (170元)</span><select class="qty" data-name="包餡魚丸" data-price="170"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></div>
+        <div class="item"><span>無包餡魚丸 (150元)</span><select class="qty" data-name="無包餡魚丸" data-price="150"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></div>
+        <div class="item"><span>原味貢丸 (190元)</span><select class="qty" data-name="原味貢丸" data-price="190"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></div>
+        <div class="item"><span>福州燕丸 (220元)</span><select class="qty" data-name="福州燕丸" data-price="220"><option value="0">0</option><option value="1">1</option><option value="2">2</option></select></div>
     </div>
-    <button class="btn" id="btn" onclick="send()">送出訂單</button>
+    <button class="btn" onclick="send()">確認送出</button>
 </div>
 
 <div class="card" id="adminArea" style="display:none;">
-    <h2>📊 團購結算總表</h2>
-    <div id="loading">讀取中...</div>
-    <div class="stat-box" id="result"></div>
-    <button class="btn" onclick="location.reload()">重新整理數據</button>
+    <h2 style="text-align:center;">📊 結算總表</h2>
+    <div id="result">讀取中...</div>
+    <button class="btn" style="background:#555" onclick="location.reload()">重新整理</button>
 </div>
 
 <script>
-    const gasUrl = 'https://script.google.com/macros/s/AKfycbxxX4MePXyT35N0cEYBTs2m0sFqUQOOOUIAIq5cBAcA-WYts79fpATqAITKaCXwwX7ncQ/exec'; // 👈 貼上新的 /exec 網址
+    const gasUrl = 'https://script.google.com/macros/s/AKfycbwqBK4d6-ksQzhr9WHWMNVoUAp4eMD-MGhKcK00orU7qprOLYBxtU8iwwexmkXgQWXEHg/exec'; // 👈 貼上最新的 /exec 網址
 
     window.onload = function() {
         if (window.location.search.includes('admin')) {
@@ -54,7 +46,7 @@
 
     async function send() {
         const name = document.getElementById('name').value;
-        if (!name) return alert("請填寫姓名");
+        if (!name) return alert("請輸入姓名");
         let details = [], total = 0;
         document.querySelectorAll('.qty').forEach(s => {
             if (s.value > 0) {
@@ -62,8 +54,6 @@
                 total += s.value * s.dataset.price;
             }
         });
-        if (total === 0) return alert("請選購品項");
-        document.getElementById('btn').disabled = true;
         await fetch(gasUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({name, orderString: details.join(', '), total}) });
         alert("訂購成功！");
         location.reload();
@@ -82,8 +72,7 @@
         });
         let h = "";
         for (let k in sum) h += `<div class="stat-line"><b>${k}</b><span>${sum[k]} 包</span></div>`;
-        document.getElementById('result').innerHTML = h + `<div class="total-price">總應付：NT$ ${gTotal}</div>`;
-        document.getElementById('loading').style.display = 'none';
+        document.getElementById('result').innerHTML = h + `<div class="total-price">總計：NT$ ${gTotal}</div>`;
     }
 </script>
 </body>
