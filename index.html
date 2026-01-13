@@ -3,155 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>新竹魚丸採購團 - 店家整合版</title>
+    <title>新竹魚丸團購系統</title>
     <style>
-        :root { --primary: #2e59a7; --secondary: #f39c12; }
         body { font-family: sans-serif; background: #f4f4f4; padding: 15px; margin: 0; }
-        .card { max-width: 550px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h2, h3 { text-align: center; color: var(--primary); }
+        .card { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2, h3 { text-align: center; color: #2e59a7; }
         .item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
-        select { padding: 8px; border-radius: 5px; font-size: 16px; width: 80px; }
-        .btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; margin-top: 15px; }
-        .btn:disabled { background: #ccc; }
+        select { padding: 8px; border-radius: 5px; font-size: 16px; width: 70px; }
+        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; margin: 10px 0; }
+        .btn { width: 100%; padding: 15px; background: #2e59a7; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; }
         
-        /* 表格樣式 */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        /* 店家總計區 */
+        .summary-card { max-width: 600px; margin: auto; background: #fff3e0; padding: 20px; border-radius: 12px; border: 2px solid #f39c12; margin-bottom: 20px; }
+        .summary-item { display: flex; justify-content: space-between; padding: 5px 0; font-weight: bold; color: #e67e22; border-bottom: 1px solid #ffe0b2; }
+        
+        /* 表格與刪除鍵 */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background: #f8f9fa; }
-        
-        /* 店家統計區 */
-        .summary-card { max-width: 550px; margin: auto; background: #fff3e0; padding: 20px; border-radius: 12px; border: 2px solid var(--secondary); }
-        .summary-item { display: flex; justify-content: space-between; padding: 5px 0; font-weight: bold; color: #e67e22; }
+        .del-btn { background: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>🚍 新竹魚丸採購登記</h2>
-    <label><b>訂購人姓名：</b></label>
-    <input type="text" id="name" style="width:100%; padding:10px; box-sizing:border-box; margin:10px 0 20px 0;" placeholder="請輸入姓名">
-    
-    <div id="itemList">
-        </div>
-    
-    <h3 style="text-align:right; color:#d9534f;">總金額：NT$ <span id="totalPrice">0</span></h3>
-    <button class="btn" id="submitBtn" onclick="send()">確認送出訂單</button>
+    <h2>🚍 新竹魚丸訂購</h2>
+    <input type="text" id="userName" placeholder="請輸入姓名">
+    <div id="productArea"></div>
+    <h3 style="text-align:right;">總計: <span id="displayTotal">0</span> 元</h3>
+    <button class="btn" id="sendBtn" onclick="submitOrder()">送出訂單</button>
 </div>
 
 <div class="summary-card">
-    <h3>🏪 店家總單統計 (叫貨用)</h3>
-    <div id="shopSummary">正在計算總量...</div>
-    <hr>
-    <div class="summary-item" style="font-size: 20px;">
-        <span>總收款金額：</span>
-        <span>NT$ <span id="grandTotal">0</span></span>
+    <h3>🏪 店家總單 (統計)</h3>
+    <div id="shopSummary">載入中...</div>
+    <div class="summary-item" style="font-size: 18px; border: none;">
+        <span>總收款總額：</span><span id="allMoney">0</span>
     </div>
 </div>
 
 <div class="card">
-    <h3>📊 即時訂單明細</h3>
-    <table id="orderTable">
-        <thead>
-            <tr><th>姓名</th><th>訂購內容</th><th>時間</th></tr>
-        </thead>
-        <tbody id="orderBody"></tbody>
+    <h3>📊 訂單明細 (可刪除)</h3>
+    <table>
+        <thead><tr><th>姓名</th><th>內容</th><th>時間</th><th>操作</th></tr></thead>
+        <tbody id="detailTable"></tbody>
     </table>
 </div>
 
 <script>
-    const gasUrl = 'https://script.google.com/macros/s/AKfycbw24jYvYUnwiDHQgzjFS0to1CgTqV1EMeqMh-AzlERDBTObngOdvNSM5GylkvD9v1bpRA/exec'; // 👈 換成您的網址
+    const gasUrl = 'https://script.google.com/macros/s/AKfycbwYG1HTgGpqpUsbqDmhdx9NMPbIs7jAVLty2Pfs2RAfQGegWRHOgxoQYtbZuC-vO5xdUQ/exec'; // 👈 請換成您的網址
     const products = [
-        { name: "包餡魚丸", price: 170 },
-        { name: "無包餡魚丸", price: 150 },
-        { name: "原味貢丸", price: 190 },
-        { name: "香菇貢丸", price: 190 },
-        { name: "福州燕丸", price: 220 },
-        { name: "鮮蔥貢丸", price: 220 }
+        { name: "包餡魚丸", price: 170 }, { name: "無包餡魚丸", price: 150 },
+        { name: "原味貢丸", price: 190 }, { name: "香菇貢丸", price: 190 },
+        { name: "福州燕丸", price: 220 }, { name: "鮮蔥貢丸", price: 220 }
     ];
 
-    // 初始化選單
-    const container = document.getElementById('itemList');
-    products.forEach((p, index) => {
-        let options = '';
-        for(let i=0; i<=10; i++) options += `<option value="${i}">${i}</option>`; // 設定為 10 個
-        container.innerHTML += `
-            <div class="item">
-                <span>${p.name} (${p.price}元)</span>
-                <select class="qty" data-index="${index}">${options}</select>
-            </div>`;
+    // 建立選單 (0-10)
+    const area = document.getElementById('productArea');
+    products.forEach((p, i) => {
+        let opt = '';
+        for(let j=0; j<=10; j++) opt += `<option value="${j}">${j}</option>`;
+        area.innerHTML += `<div class="item"><span>${p.name} (${p.price}元)</span>
+            <select class="qty" data-idx="${i}" onchange="calc()">${opt}</select></div>`;
     });
 
-    // 計算總金額
-    document.addEventListener('change', () => {
-        let total = 0;
-        document.querySelectorAll('.qty').forEach(s => {
-            total += s.value * products[s.dataset.index].price;
-        });
-        document.getElementById('totalPrice').innerText = total;
-    });
-
-    async function fetchOrders() {
-        const resp = await fetch(gasUrl);
-        const data = await resp.json();
-        const tbody = document.getElementById('orderBody');
-        const summaryDiv = document.getElementById('shopSummary');
-        tbody.innerHTML = '';
-        
-        let stats = {};
-        products.forEach(p => stats[p.name] = 0);
-        let grandTotal = 0;
-
-        data.reverse().forEach(row => {
-            // 寫入明細表格
-            tbody.innerHTML += `<tr><td>${row[0]}</td><td>${row[1]}</td><td>${row[3]}</td></tr>`;
-            
-            // 解析資料給店家統計 (格式: 品項x數量)
-            products.forEach(p => {
-                const regex = new RegExp(`${p.name}x(\\d+)`);
-                const match = row[1].match(regex);
-                if (match) stats[p.name] += parseInt(match[1]);
-            });
-            grandTotal += parseInt(row[2]);
-        });
-
-        // 顯示店家統計
-        summaryDiv.innerHTML = '';
-        for (let key in stats) {
-            if (stats[key] > 0) {
-                summaryDiv.innerHTML += `<div class="summary-item"><span>${key}：</span><span>${stats[key]} 斤</span></div>`;
-            }
-        }
-        document.getElementById('grandTotal').innerText = grandTotal;
+    function calc() {
+        let t = 0;
+        document.querySelectorAll('.qty').forEach(s => t += s.value * products[s.dataset.idx].price);
+        document.getElementById('displayTotal').innerText = t;
     }
 
-    async function send() {
-        const name = document.getElementById('name').value.trim();
-        if (!name) return alert("請輸入姓名");
-        
-        let details = [];
-        let total = 0;
+    async function loadData() {
+        try {
+            const res = await fetch(gasUrl);
+            const data = await res.json();
+            const table = document.getElementById('detailTable');
+            const summary = document.getElementById('shopSummary');
+            table.innerHTML = ''; summary.innerHTML = '';
+            
+            let stats = {}; products.forEach(p => stats[p.name] = 0);
+            let totalMoney = 0;
+
+            data.slice().reverse().forEach(row => {
+                table.innerHTML += `<tr>
+                    <td>${row[0]}</td><td>${row[1]}</td><td>${row[3]}</td>
+                    <td><button class="del-btn" onclick="deleteOrder('${row[0]}','${row[3]}')">刪除</button></td>
+                </tr>`;
+                
+                products.forEach(p => {
+                    const m = row[1].match(new RegExp(`${p.name}x(\\d+)`));
+                    if(m) stats[p.name] += parseInt(m[1]);
+                });
+                totalMoney += parseInt(row[2]);
+            });
+
+            for(let k in stats) if(stats[k]>0) summary.innerHTML += `<div class="summary-item"><span>${k}</span><span>${stats[k]} 斤</span></div>`;
+            document.getElementById('allMoney').innerText = totalMoney;
+        } catch(e) { document.getElementById('shopSummary').innerText = "讀取失敗，請檢查 GAS 部署權限。"; }
+    }
+
+    async function submitOrder() {
+        const name = document.getElementById('userName').value.trim();
+        if(!name) return alert("請填姓名");
+        let d = [], t = 0;
         document.querySelectorAll('.qty').forEach(s => {
-            if (s.value > 0) {
-                const p = products[s.dataset.index];
-                details.push(`${p.name}x${s.value}`);
-                total += s.value * p.price;
+            if(s.value > 0) {
+                d.push(`${products[s.dataset.idx].name}x${s.value}`);
+                t += s.value * products[s.dataset.idx].price;
             }
         });
-
-        if (total === 0) return alert("請選擇品項");
+        if(t === 0) return alert("請選擇品項");
         
-        document.getElementById('submitBtn').disabled = true;
-        await fetch(gasUrl, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify({ name: name, orderString: details.join(', '), total: total })
-        });
-        
+        document.getElementById('sendBtn').disabled = true;
+        await fetch(gasUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, orderString: d.join(', '), total: t }) });
         alert("訂購成功！");
         location.reload();
     }
 
-    window.onload = fetchOrders;
+    async function deleteOrder(name, time) {
+        if(!confirm(`確定要刪除 ${name} 在 ${time} 的訂單嗎？`)) return;
+        await fetch(gasUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "delete", name: name, timestamp: time }) });
+        alert("已刪除！");
+        location.reload();
+    }
+
+    window.onload = loadData;
 </script>
 </body>
 </html>
