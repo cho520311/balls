@@ -3,151 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>魚丸團購系統-最終穩定版</title>
+    <title>魚丸團購登記系統</title>
     <style>
-        :root { --primary: #2e59a7; --secondary: #f39c12; --danger: #ff4d4d; }
-        body { font-family: -apple-system, sans-serif; background: #f4f7f9; padding: 10px; margin: 0; }
+        :root { --primary: #2e59a7; --secondary: #f39c12; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f7f9; padding: 10px; margin: 0; }
+        
+        /* 容器與卡片設計 */
         .card, .summary-card { width: 100%; max-width: 600px; margin: 0 auto 15px auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); box-sizing: border-box; }
-        h2, h3 { text-align: center; color: var(--primary); margin-top: 5px; }
+        h2, h3 { text-align: center; color: var(--primary); margin: 5px 0 15px 0; }
+        
+        /* 輸入與品項選單 */
+        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; margin-bottom: 15px; }
         .item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
-        select { padding: 8px; border-radius: 6px; font-size: 16px; width: 80px; border: 1px solid #ccc; }
-        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; margin-bottom: 10px; }
-        .btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        .btn:disabled { background: #ccc; }
-        /* 店家統計區 */
+        .item b { color: #333; font-size: 16px; }
+        select { padding: 8px; border-radius: 6px; font-size: 16px; width: 80px; background: #fff; border: 1px solid #ccc; }
+        
+        .total-info { text-align: right; color: #d9534f; font-size: 20px; font-weight: bold; margin: 15px 0; }
+        .btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* 店家統計區 (橘黃色風格) */
         .summary-card { background: #fff3e0; border: 2px solid var(--secondary); }
-        .summary-item { display: flex; justify-content: space-between; padding: 8px 0; font-weight: bold; color: #e67e22; border-bottom: 1px dashed #ffe0b2; }
-        .grand-total { font-size: 20px; color: #d9534f; border-top: 2px solid #f39c12; margin-top: 10px; padding-top: 10px; }
-        /* 表格 */
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 400px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background: #f8f9fa; color: var(--primary); }
-        .del-btn { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .summary-item { display: flex; justify-content: space-between; padding: 10px 0; font-weight: bold; color: #e67e22; border-bottom: 1px dashed #ffe0b2; }
+        .grand-total { font-size: 22px; color: #d9534f; border-top: 2px solid #f39c12; margin-top: 10px; padding-top: 10px; border-bottom: none; }
+
+        /* 表格優化 */
+        .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 450px; background: white; }
+        th, td { border: 1px solid #ddd; padding: 12px 8px; text-align: left; }
+        th { background: #f8f9fa; color: var(--primary); font-weight: bold; }
+        
+        @media (max-width: 480px) {
+            .card, .summary-card { padding: 12px; }
+            .item b { font-size: 15px; }
+            select { width: 70px; }
+        }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>🚍 魚丸團購登記</h2>
+    <h2>🚍 魚丸採購登記</h2>
     <input type="text" id="userName" placeholder="請輸入訂購人姓名">
+    
     <div id="productArea"></div>
-    <h3 style="text-align:right; color:#d9534f;">小計: <span id="displayTotal">0</span> 元</h3>
-    <button class="btn" onclick="submitOrder()" id="sendBtn">確認送出訂單</button>
+    
+    <div class="total-info">本次小計: <span id="displayTotal">0</span> 元</div>
+    <button class="btn" onclick="submitOrder()" id="sendBtn">確認並送出訂單</button>
 </div>
 
 <div class="summary-card">
-    <h3>🏪 店家總單統計 (與試算表同步)</h3>
-    <div id="shopSummary">資料載入中...</div>
+    <h3>🏪 店家總單統計 (與雲端同步)</h3>
+    <div id="shopSummary">正在載入最新統計資料...</div>
 </div>
 
 <div class="card">
     <h3>📊 即時訂單明細</h3>
     <div class="table-container">
         <table>
-            <thead><tr><th>姓名</th><th>訂購內容</th><th>時間</th><th>操作</th></tr></thead>
-            <tbody id="detailTable"></tbody>
+            <thead>
+                <tr>
+                    <th>姓名</th>
+                    <th>訂購內容</th>
+                    <th>金額</th>
+                    <th>時間</th>
+                </tr>
+            </thead>
+            <tbody id="detailTable">
+                <tr><td colspan="4" style="text-align:center;">資料讀取中...</td></tr>
+            </tbody>
         </table>
     </div>
 </div>
 
 <script>
-    const gasUrl = 'https://script.google.com/macros/s/AKfycbypRIoCg9HoOLMpv3wgga6XciqS7RhMKVXtOZnTFMb2kwQDiT1Zg2WrtzYKsaBnGNRc3g/exec'; // 👈 請務必在此貼上部署後的 exec 網址
+    const gasUrl = 'https://script.google.com/macros/s/AKfycbw_Slvz15M7zhL0YysDm3WApQr7QLdkC6ZVZ5aXmCZVsAThitMi1dLcPeknL5p9NMRwYw/exec'; // 👈 務必替換為您的 /exec 網址
 
     const products = [
-        { name: "包餡魚丸", price: 170 }, { name: "無包餡魚丸", price: 150 },
-        { name: "原味貢丸", price: 190 }, { name: "香菇貢丸", price: 190 },
-        { name: "福州燕丸", price: 220 }, { name: "鮮蔥貢丸", price: 220 }
+        { name: "包餡魚丸", price: 170 },
+        { name: "無包餡魚丸", price: 150 },
+        { name: "原味貢丸", price: 190 },
+        { name: "香菇貢丸", price: 190 },
+        { name: "福州燕丸", price: 220 },
+        { name: "鮮蔥貢丸", price: 220 }
     ];
 
-    // 初始化 0-10 選單
+    // 初始化選單
     const area = document.getElementById('productArea');
     products.forEach((p, i) => {
         let opt = '';
         for(let j=0; j<=10; j++) opt += `<option value="${j}">${j}</option>`;
-        area.innerHTML += `<div class="item"><span><b>${p.name}</b><br><small>${p.price}元/斤</small></span>
-            <select class="qty" data-idx="${i}" onchange="calcTotal()">${opt}</select></div>`;
+        area.innerHTML += `
+            <div class="item">
+                <span><b>${p.name}</b><br><small>${p.price}元/斤</small></span>
+                <select class="qty" data-idx="${i}" onchange="calcTotal()">${opt}</select>
+            </div>`;
     });
 
     function calcTotal() {
         let t = 0;
-        document.querySelectorAll('.qty').forEach(s => t += s.value * products[s.dataset.idx].price);
+        document.querySelectorAll('.qty').forEach(s => {
+            t += parseInt(s.value) * products[s.dataset.idx].price;
+        });
         document.getElementById('displayTotal').innerText = t;
     }
 
-    // 載入資料 (增加防快取參數)
+    // 載入資料
     async function loadData() {
         try {
+            // 加入時間戳記防止手機快取舊資料
             const res = await fetch(`${gasUrl}?t=${new Date().getTime()}`);
             const data = await res.json();
             
-            // 1. 顯示訂單明細
+            // 1. 顯示明細
             const table = document.getElementById('detailTable');
             table.innerHTML = '';
             if (data.orders.length === 0) {
-                table.innerHTML = '<tr><td colspan="4" style="text-align:center;">目前尚無資料</td></tr>';
+                table.innerHTML = '<tr><td colspan="4" style="text-align:center;">目前尚無訂單資料</td></tr>';
             } else {
                 data.orders.slice().reverse().forEach(row => {
+                    // row[0]=姓名, row[1]=內容, row[2]=金額, row[5]=時間
                     table.innerHTML += `<tr>
-                        <td>${row[0]}</td><td>${row[1]}</td><td>${row[5]}</td>
-                        <td><button class="del-btn" onclick="deleteOrder('${row[0]}','${row[5]}')">刪除</button></td>
+                        <td>${row[0]}</td>
+                        <td>${row[1]}</td>
+                        <td style="font-weight:bold; color:#d9534f;">$${row[2]}</td>
+                        <td>${row[5]}</td>
                     </tr>`;
                 });
             }
 
-            // 2. 顯示統計 (對應 D, E 欄)
+            // 2. 顯示統計 (讀取 D, E 欄)
             const summary = document.getElementById('shopSummary');
             summary.innerHTML = '';
             data.summary.forEach(row => {
                 if (!row[0]) return;
                 const isTotal = row[0].includes("總金額");
-                summary.innerHTML += `<div class="summary-item ${isTotal ? 'grand-total' : ''}">
-                    <span>${row[0]}</span><span>${row[1]} ${isTotal ? '元' : '斤'}</span></div>`;
+                summary.innerHTML += `
+                    <div class="summary-item ${isTotal ? 'grand-total' : ''}">
+                        <span>${row[0]}</span>
+                        <span>${row[1]} ${isTotal ? '元' : '斤'}</span>
+                    </div>`;
             });
-        } catch(e) { 
-            document.getElementById('shopSummary').innerText = "讀取失敗，請確認 GAS 部署是否設為『所有人』。"; 
+        } catch(e) {
+            document.getElementById('shopSummary').innerText = "連線失敗，請檢查 GAS 部署權限是否設為『所有人』。";
         }
     }
 
     // 送出訂單
     async function submitOrder() {
         const name = document.getElementById('userName').value.trim();
-        if(!name) return alert("請輸入姓名！");
-        let d = [], t = 0;
+        if(!name) return alert("請輸入您的姓名！");
+        
+        let details = [], total = 0;
         document.querySelectorAll('.qty').forEach(s => {
-            if(s.value > 0) {
-                d.push(`${products[s.dataset.idx].name}x${s.value}`);
-                t += s.value * products[s.dataset.idx].price;
+            const qty = parseInt(s.value);
+            if(qty > 0) {
+                details.push(`${products[s.dataset.idx].name}x${qty}`);
+                total += qty * products[s.dataset.idx].price;
             }
         });
-        if(t === 0) return alert("請選擇品項！");
+
+        if(total === 0) return alert("請選擇至少一項魚丸！");
         
         const btn = document.getElementById('sendBtn');
         btn.disabled = true;
         btn.innerText = "傳送中...";
 
-        await fetch(gasUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, orderString: d.join(', '), total: t }) });
-        
-        alert("🎉 訂購成功！正在更新列表...");
-        setTimeout(() => location.reload(), 1500);
-    }
-
-    // 刪除訂單
-    async function deleteOrder(name, time) {
-        if(!confirm(`確定要刪除 ${name} 的訂單嗎？`)) return;
-        
-        // 刪除請求
-        await fetch(gasUrl, { 
-            method: 'POST', 
-            mode: 'no-cors', 
-            body: JSON.stringify({ action: "delete", name: name, timestamp: time }) 
-        });
-
-        alert("已發送刪除指令，正在重新載入資料...");
-        // 強制延遲一點時間再刷新，避免讀到舊資料
-        setTimeout(() => {
+        try {
+            await fetch(gasUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ name: name, orderString: details.join(', '), total: total })
+            });
+            alert("🎉 訂購成功！");
             location.reload();
-        }, 2000);
+        } catch(e) {
+            alert("傳送失敗，請稍後再試。");
+            btn.disabled = false;
+            btn.innerText = "確認並送出訂單";
+        }
     }
 
     window.onload = loadData;
