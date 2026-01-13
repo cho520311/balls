@@ -3,72 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>團購統計結算系統</title>
+    <title>團購統計系統 V3.0</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; display: flex; justify-content: center; }
+        body { font-family: -apple-system, sans-serif; background: #f4f7f9; padding: 20px; display: flex; justify-content: center; }
         .card { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .stat-box { background: #e8f0fe; border: 2px solid #1a73e8; padding: 15px; border-radius: 10px; margin-top: 10px; }
-        .stat-line { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #cce0ff; font-size: 18px; }
-        .total-price { font-size: 24px; color: #d93025; font-weight: bold; text-align: center; margin-top: 20px; border-top: 2px solid #ddd; padding-top: 10px; }
-        .btn { width: 100%; padding: 15px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; margin-top: 15px; }
-        h2 { text-align: center; color: #1a73e8; }
-        #adminArea { display: none; } /* 預設隱藏統計，暗號開啟 */
+        h2 { text-align: center; color: #1a73e8; margin-top: 0; }
+        .item { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px; align-items: center; }
+        select { padding: 8px; border-radius: 5px; border: 1px solid #ddd; }
+        .btn { width: 100%; padding: 15px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        /* 統計區樣式 */
+        .stat-box { background: #eef2ff; border: 2px solid #4f46e5; padding: 15px; border-radius: 10px; margin-top: 15px; }
+        .stat-line { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #c7d2fe; font-size: 18px; }
+        .total-price { font-size: 26px; color: #dc2626; font-weight: bold; text-align: center; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-<div class="card" id="adminArea">
-    <h2>📊 本次團購結算總表</h2>
-    <p style="text-align:center; color: #666;">(此數據直接加總所有訂單，已自動過濾空格)</p>
-    <div id="statLoading">正在即時計算中...</div>
-    <div class="stat-box" id="statContent"></div>
-    <button class="btn" style="background:#34a853" onclick="window.print()">截圖或列印給店家</button>
-    <button class="btn" style="background:#555" onclick="location.href=location.pathname">回到訂單填寫頁</button>
+<div class="card" id="userArea">
+    <h2>🚍 魚丸團購登記表</h2>
+    <div style="margin-bottom: 15px;">
+        <label><b>姓名：</b></label>
+        <input type="text" id="name" style="width:90%; padding:10px; margin-top:5px;" placeholder="請輸入大名">
+    </div>
+    <div id="itemList">
+        <div class="item"><span>包餡魚丸 (170元)</span><select class="qty" data-name="包餡魚丸" data-price="170"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
+        <div class="item"><span>無包餡魚丸 (150元)</span><select class="qty" data-name="無包餡魚丸" data-price="150"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
+        <div class="item"><span>原味貢丸 (190元)</span><select class="qty" data-name="原味貢丸" data-price="190"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
+        <div class="item"><span>福州燕丸 (220元)</span><select class="qty" data-name="福州燕丸" data-price="220"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
+    </div>
+    <button class="btn" id="btn" onclick="send()">送出訂單</button>
+</div>
+
+<div class="card" id="adminArea" style="display:none;">
+    <h2>📊 團購結算總表</h2>
+    <div id="loading">讀取中...</div>
+    <div class="stat-box" id="result"></div>
+    <button class="btn" onclick="location.reload()">重新整理數據</button>
 </div>
 
 <script>
-    const gasUrl = 'https://script.google.com/macros/s/AKfycbx9yw7F8N2t3V4dQFXq63Rgg_n_-sYmYinWQJgryT1TSzwaoWmfAuzZc05Vqr0Hkfsalw/exec'; // 👈 請貼上您剛複製的 /exec 網址
+    const gasUrl = 'https://script.google.com/macros/s/AKfycbxxX4MePXyT35N0cEYBTs2m0sFqUQOOOUIAIq5cBAcA-WYts79fpATqAITKaCXwwX7ncQ/exec'; // 👈 貼上新的 /exec 網址
 
-    // 網頁載入時檢查暗號
     window.onload = function() {
         if (window.location.search.includes('admin')) {
+            document.getElementById('userArea').style.display = 'none';
             document.getElementById('adminArea').style.display = 'block';
-            fetchStats();
-        } else {
-            // 如果沒暗號，自動跳轉或顯示原本的訂單表單 (此處建議保留原本表單代碼)
-            alert("請在網址後加上 ?admin 進入統計模式");
+            getStats();
         }
     };
 
-    async function fetchStats() {
-        try {
-            const response = await fetch(gasUrl);
-            const allData = await response.json();
-            
-            let summary = { "包餡魚丸":0, "無包餡魚丸":0, "原味貢丸":0, "香菇貢丸":0, "福州燕丸":0, "鮮蔥貢丸":0 };
-            let grandTotal = 0;
-
-            allData.forEach(row => {
-                // row[1] 是訂單內容文字
-                if (row[1]) {
-                    for (let key in summary) {
-                        let match = row[1].match(new RegExp(key + "x(\\d+)"));
-                        if (match) summary[key] += parseInt(match[1]);
-                    }
-                }
-                // row[2] 是該筆訂單金額
-                if (row[2]) grandTotal += parseInt(row[2]);
-            });
-
-            let html = "";
-            for (let key in summary) {
-                html += `<div class="stat-line"><b>${key}</b><span>${summary[key]} 包</span></div>`;
+    async function send() {
+        const name = document.getElementById('name').value;
+        if (!name) return alert("請填寫姓名");
+        let details = [], total = 0;
+        document.querySelectorAll('.qty').forEach(s => {
+            if (s.value > 0) {
+                details.push(`${s.dataset.name}x${s.value}`);
+                total += s.value * s.dataset.price;
             }
-            document.getElementById('statContent').innerHTML = html + `<div class="total-price">💰 總應付金額：NT$ ${grandTotal}</div>`;
-            document.getElementById('statLoading').style.display = 'none';
-        } catch (e) {
-            document.getElementById('statLoading').innerText = "讀取資料失敗，請確認已有人填寫訂單。";
-        }
+        });
+        if (total === 0) return alert("請選購品項");
+        document.getElementById('btn').disabled = true;
+        await fetch(gasUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({name, orderString: details.join(', '), total}) });
+        alert("訂購成功！");
+        location.reload();
+    }
+
+    async function getStats() {
+        const res = await fetch(gasUrl);
+        const data = await res.json();
+        let sum = {"包餡魚丸":0, "無包餡魚丸":0, "原味貢丸":0, "福州燕丸":0}, gTotal = 0;
+        data.forEach(r => {
+            for (let k in sum) {
+                let m = r[1].match(new RegExp(k + "x(\\d+)"));
+                if (m) sum[k] += parseInt(m[1]);
+            }
+            gTotal += parseInt(r[2]);
+        });
+        let h = "";
+        for (let k in sum) h += `<div class="stat-line"><b>${k}</b><span>${sum[k]} 包</span></div>`;
+        document.getElementById('result').innerHTML = h + `<div class="total-price">總應付：NT$ ${gTotal}</div>`;
+        document.getElementById('loading').style.display = 'none';
     }
 </script>
 </body>
