@@ -3,227 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>新竹魚丸採購系統 (全功能開放版)</title>
+    <title>新竹魚丸採購系統</title>
     <style>
         :root { --primary: #2e59a7; --secondary: #f39c12; --danger: #ff4d4d; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; padding: 10px; margin: 0; }
-        
-        /* 容器優化：確保手機版填滿寬度 */
+        body { font-family: sans-serif; background: #f0f2f5; padding: 10px; margin: 0; }
         .card, .summary-card { 
-            width: 100%; 
-            max-width: 600px; 
-            margin: 0 auto 15px auto; 
-            background: white; 
-            padding: 15px; 
-            border-radius: 12px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1); 
-            box-sizing: border-box; 
+            width: 100%; max-width: 600px; margin: 0 auto 15px auto; 
+            background: white; padding: 15px; border-radius: 12px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); box-sizing: border-box; 
         }
-        
         h2, h3 { text-align: center; color: var(--primary); margin: 10px 0; }
-        
-        /* 表單區域 */
-        .input-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        
-        /* 品項列表優化 */
-        .item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
-        .item span { font-size: 15px; flex: 1; }
-        select { padding: 8px; border-radius: 6px; font-size: 16px; width: 85px; background: #fff; border: 1px solid #ccc; }
-        
-        .total-row { text-align: right; color: #d9534f; font-size: 20px; font-weight: bold; margin: 15px 0; }
+        .item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+        select { padding: 8px; border-radius: 6px; font-size: 16px; width: 80px; }
+        input[type="text"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; margin-bottom: 10px; }
         .btn { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        .btn:disabled { background: #ccc; }
-
-        /* 店家總單統計區 (全開放) */
-        .summary-card { background: #fff3e0; border: 2px solid var(--secondary); }
-        .summary-item { display: flex; justify-content: space-between; padding: 6px 0; font-weight: bold; color: #e67e22; border-bottom: 1px dashed #ffe0b2; }
         
-        /* 表格優化：防止手機版溢出 */
-        .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 450px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background: #f8f9fa; color: var(--primary); }
-        .del-btn { background: var(--danger); color: white; border: none; padding: 6px 10px; border-radius: 4px; font-size: 12px; }
+        /* 店家統計區 (對應試算表 D, E 欄) */
+        .summary-card { background: #fff3e0; border: 2px solid var(--secondary); }
+        .summary-item { display: flex; justify-content: space-between; padding: 8px 0; font-weight: bold; color: #e67e22; border-bottom: 1px dashed #ffe0b2; }
+        .grand-total { font-size: 20px; color: #d9534f; border: none; margin-top: 10px; }
 
-        /* 手機版字體與間距微調 */
+        /* 表格優化 */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 400px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f8f9fa; }
+        .del-btn { background: var(--danger); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+
         @media (max-width: 480px) {
-            body { padding: 8px; }
-            .card, .summary-card { padding: 12px; }
             .item span { font-size: 14px; }
-            select { width: 75px; font-size: 15px; }
-            h2 { font-size: 20px; }
+            select { width: 70px; }
         }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h2>🚍 新竹魚丸採購登記</h2>
-    <div class="input-group">
-        <label>訂購人姓名：</label>
-        <input type="text" id="userName" placeholder="請輸入姓名">
-    </div>
-    
+    <h2>🚍 新竹魚丸採購</h2>
+    <input type="text" id="userName" placeholder="請輸入姓名">
     <div id="productArea"></div>
-    
-    <div class="total-row">總計: <span id="displayTotal">0</span> 元</div>
-    <button class="btn" id="sendBtn" onclick="submitOrder()">確認送出訂單</button>
+    <h3 style="text-align:right; color:#d9534f;">小計: <span id="displayTotal">0</span> 元</h3>
+    <button class="btn" onclick="submitOrder()" id="sendBtn">送出訂單</button>
 </div>
 
-<div class="summary-card">
-    <h3>🏪 店家總單統計 (叫貨用)</h3>
-    <div id="shopSummary">正在從雲端抓取資料...</div>
-    <div class="summary-item" style="font-size: 18px; border: none; margin-top: 10px;">
-        <span>預計收款總額：</span>
-        <span>NT$ <span id="allMoney">0</span></span>
-    </div>
+<div class="summary-card" id="summarySection">
+    <h3>🏪 店家叫貨總單統計</h3>
+    <div id="shopSummary">載入中...</div>
 </div>
 
 <div class="card">
-    <h3>📊 即時訂單明細 (可刪除)</h3>
+    <h3>📊 即時訂單明細</h3>
     <div class="table-container">
         <table>
-            <thead>
-                <tr>
-                    <th>姓名</th>
-                    <th>訂購內容</th>
-                    <th>時間</th>
-                    <th>管理</th>
-                </tr>
-            </thead>
-            <tbody id="detailTable">
-                <tr><td colspan="4" style="text-align:center;">讀取中...</td></tr>
-            </tbody>
+            <thead><tr><th>姓名</th><th>內容</th><th>時間</th><th>管理</th></tr></thead>
+            <tbody id="detailTable"></tbody>
         </table>
     </div>
 </div>
 
 <script>
-    const gasUrl = 'https://script.google.com/macros/s/AKfycbx_ixNSXTbuZ6aTdO0C0q82rSV3fj06psMqA0070UFEfaeL4HQqlPIZNjRyuAb2QBwJVA/exec'; // 👈 請務必替換為新的 GAS 網址
+    const gasUrl = 'https://script.google.com/macros/s/AKfycbzp7xdkxJ3lyz2VgrorsYGNu2R_voxrstAQXov8afr3hUxS_-uCjnJPL9v3QBTCCs8gTQ/exec'; // 👈 替換為部署後的網址
 
     const products = [
-        { name: "包餡魚丸", price: 170 },
-        { name: "無包餡魚丸", price: 150 },
-        { name: "原味貢丸", price: 190 },
-        { name: "香菇貢丸", price: 190 },
-        { name: "福州燕丸", price: 220 },
-        { name: "鮮蔥貢丸", price: 220 }
+        { name: "包餡魚丸", price: 170 }, { name: "無包餡魚丸", price: 150 },
+        { name: "原味貢丸", price: 190 }, { name: "香菇貢丸", price: 190 },
+        { name: "福州燕丸", price: 220 }, { name: "鮮蔥貢丸", price: 220 }
     ];
 
-    // 初始化選單 (0-10)
+    // 生成選單
     const area = document.getElementById('productArea');
     products.forEach((p, i) => {
         let opt = '';
         for(let j=0; j<=10; j++) opt += `<option value="${j}">${j}</option>`;
-        area.innerHTML += `
-            <div class="item">
-                <span><b>${p.name}</b><br><small>${p.price}元/斤</small></span>
-                <select class="qty" data-idx="${i}" onchange="calcTotal()">${opt}</select>
-            </div>`;
+        area.innerHTML += `<div class="item"><span>${p.name} (${p.price}元)</span>
+            <select class="qty" data-idx="${i}" onchange="calc()">${opt}</select></div>`;
     });
 
-    function calcTotal() {
-        let total = 0;
-        document.querySelectorAll('.qty').forEach(s => {
-            total += parseInt(s.value) * products[s.dataset.idx].price;
-        });
-        document.getElementById('displayTotal').innerText = total;
+    function calc() {
+        let t = 0;
+        document.querySelectorAll('.qty').forEach(s => t += s.value * products[s.dataset.idx].price);
+        document.getElementById('displayTotal').innerText = t;
     }
 
-    async function loadOrders() {
+    async function loadData() {
         try {
             const res = await fetch(gasUrl);
             const data = await res.json();
-            const table = document.getElementById('detailTable');
-            const summary = document.getElementById('shopSummary');
-            table.innerHTML = '';
-            summary.innerHTML = '';
             
-            let stats = {};
-            products.forEach(p => stats[p.name] = 0);
-            let totalMoney = 0;
-
-            if (data.length === 0) {
-                table.innerHTML = '<tr><td colspan="4" style="text-align:center;">目前尚無訂單</td></tr>';
-                summary.innerHTML = '尚無統計資料';
-                return;
-            }
-
-            // 反轉陣列讓最新訂單在上面
-            data.slice().reverse().forEach(row => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${row[0]}</td>
-                    <td>${row[1]}</td>
-                    <td>${row[3]}</td>
-                    <td><button class="del-btn" onclick="deleteOrder('${row[0]}','${row[3]}')">刪除</button></td>
-                `;
-                table.appendChild(tr);
-                
-                // 統計各品項數量
-                products.forEach(p => {
-                    const match = row[1].match(new RegExp(`${p.name}x(\\d+)`));
-                    if(match) stats[p.name] += parseInt(match[1]);
-                });
-                totalMoney += parseInt(row[2]);
+            // 1. 顯示明細
+            const table = document.getElementById('detailTable');
+            table.innerHTML = '';
+            data.orders.slice().reverse().forEach(row => {
+                table.innerHTML += `<tr>
+                    <td>${row[0]}</td><td>${row[1]}</td><td>${row[5]}</td>
+                    <td><button class="del-btn" onclick="deleteOrder('${row[0]}','${row[5]}')">刪除</button></td>
+                </tr>`;
             });
 
-            for(let key in stats) {
-                if(stats[key] > 0) {
-                    summary.innerHTML += `<div class="summary-item"><span>${key}</span><span>${stats[key]} 斤</span></div>`;
-                }
-            }
-            if(summary.innerHTML === '') summary.innerHTML = '尚無勾選品項';
-            document.getElementById('allMoney').innerText = totalMoney;
-        } catch(e) {
-            document.getElementById('shopSummary').innerText = "讀取失敗，請確認 GAS 是否部署為「所有人」並更新版本。";
-        }
+            // 2. 顯示試算表 D, E 欄統計
+            const summary = document.getElementById('shopSummary');
+            summary.innerHTML = '';
+            data.summary.forEach(row => {
+                let label = row[0];
+                let value = row[1];
+                let isTotal = label.includes("總金額");
+                summary.innerHTML += `<div class="summary-item ${isTotal ? 'grand-total' : ''}">
+                    <span>${label}</span>
+                    <span>${value} ${isTotal ? '元' : '斤'}</span>
+                </div>`;
+            });
+        } catch(e) { document.getElementById('shopSummary').innerText = "讀取失敗，請更新 GAS 部署版本。"; }
     }
 
     async function submitOrder() {
         const name = document.getElementById('userName').value.trim();
-        if(!name) return alert("請輸入姓名！");
-        
-        let details = [];
-        let total = 0;
+        if(!name) return alert("請輸入姓名");
+        let d = [], t = 0;
         document.querySelectorAll('.qty').forEach(s => {
-            if(parseInt(s.value) > 0) {
-                details.push(`${products[s.dataset.idx].name}x${s.value}`);
-                total += parseInt(s.value) * products[s.dataset.idx].price;
+            if(s.value > 0) {
+                d.push(`${products[s.dataset.idx].name}x${s.value}`);
+                t += s.value * products[s.dataset.idx].price;
             }
         });
-
-        if(total === 0) return alert("請至少選擇一個品項！");
+        if(t === 0) return alert("請選擇數量");
         
-        const btn = document.getElementById('sendBtn');
-        btn.disabled = true;
-        btn.innerText = "傳送中...";
-
-        try {
-            await fetch(gasUrl, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({ name: name, orderString: details.join(', '), total: total })
-            });
-            alert("🎉 訂購成功！");
-            location.reload();
-        } catch(e) {
-            alert("傳送失敗，請稍後再試");
-            btn.disabled = false;
-        }
+        document.getElementById('sendBtn').disabled = true;
+        await fetch(gasUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ name, orderString: d.join(', '), total: t }) });
+        alert("訂購成功！");
+        location.reload();
     }
 
     async function deleteOrder(name, time) {
-        if(!confirm(`確定要刪除「${name}」在 ${time} 的訂單嗎？`)) return;
-        
-        try {
-            await fetch(gasUrl, {
-                method: 'POST',
-                mode: 'no-cors',
-                body: JSON.stringify({ action: "delete", name: name, timestamp: time })
-            });
-            alert("已成功刪除！");
-            loadOrders(); // 重新整理列表
-        } catch
+        if(!confirm("確定刪除？")) return;
+        await fetch(gasUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "delete", name, timestamp: time }) });
+        alert("已刪除");
+        location.reload();
+    }
+
+    window.onload = loadData;
+</script>
+</body>
+</html>
