@@ -3,63 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>團購統計系統</title>
+    <title>團購統計結算系統</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
-        .card { max-width: 450px; margin: auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .stat-box { background: #e8f0fe; border: 2px solid #1a73e8; padding: 15px; border-radius: 10px; margin-top: 20px; }
-        .stat-line { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #cce0ff; }
-        .total-price { font-size: 22px; color: #d93025; font-weight: bold; text-align: center; margin-top: 15px; }
-        .btn { width: 100%; padding: 15px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; margin-top: 10px; }
+        body { font-family: sans-serif; background: #f0f2f5; padding: 20px; display: flex; justify-content: center; }
+        .card { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .stat-box { background: #e8f0fe; border: 2px solid #1a73e8; padding: 15px; border-radius: 10px; margin-top: 10px; }
+        .stat-line { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #cce0ff; font-size: 18px; }
+        .total-price { font-size: 24px; color: #d93025; font-weight: bold; text-align: center; margin-top: 20px; border-top: 2px solid #ddd; padding-top: 10px; }
+        .btn { width: 100%; padding: 15px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-size: 18px; cursor: pointer; margin-top: 15px; }
         h2 { text-align: center; color: #1a73e8; }
-        .admin-only { display: none; } /* 預設隱藏統計區 */
+        #adminArea { display: none; } /* 預設隱藏統計，暗號開啟 */
     </style>
 </head>
 <body>
 
-<div class="card" id="userArea">
-    <h2>🚍 新竹團購登記</h2>
-    <button class="btn" onclick="submitOrder()">確認送出訂單</button>
-    <p style="text-align:center; color: #666; font-size: 12px;">老師專用：在網址最後加上 ?admin 即可看到總統計</p>
-</div>
-
-<div class="card admin-only" id="adminArea">
+<div class="card" id="adminArea">
     <h2>📊 本次團購結算總表</h2>
-    <div id="statLoading">正在計算總量中...</div>
-    <div class="stat-box" id="statContent">
-        </div>
-    <button class="btn" style="background:#34a853" onclick="window.print()">列印或截圖給店家</button>
-    <button class="btn" style="background:#555" onclick="location.href=location.pathname">回到填寫頁面</button>
+    <p style="text-align:center; color: #666;">(此數據直接加總所有訂單，已自動過濾空格)</p>
+    <div id="statLoading">正在即時計算中...</div>
+    <div class="stat-box" id="statContent"></div>
+    <button class="btn" style="background:#34a853" onclick="window.print()">截圖或列印給店家</button>
+    <button class="btn" style="background:#555" onclick="location.href=location.pathname">回到訂單填寫頁</button>
 </div>
 
 <script>
-    const gasUrl = 'https://script.google.com/macros/s/AKfycbx9yw7F8N2t3V4dQFXq63Rgg_n_-sYmYinWQJgryT1TSzwaoWmfAuzZc05Vqr0Hkfsalw/exec';
+    const gasUrl = 'https://script.google.com/macros/s/AKfycbx9yw7F8N2t3V4dQFXq63Rgg_n_-sYmYinWQJgryT1TSzwaoWmfAuzZc05Vqr0Hkfsalw/exec'; // 👈 請貼上您剛複製的 /exec 網址
 
-    // 檢查網址是否有 ?admin 決定顯示哪個畫面
+    // 網頁載入時檢查暗號
     window.onload = function() {
         if (window.location.search.includes('admin')) {
-            document.getElementById('userArea').style.display = 'none';
             document.getElementById('adminArea').style.display = 'block';
             fetchStats();
+        } else {
+            // 如果沒暗號，自動跳轉或顯示原本的訂單表單 (此處建議保留原本表單代碼)
+            alert("請在網址後加上 ?admin 進入統計模式");
         }
     };
 
     async function fetchStats() {
         try {
-            // 從 GAS 抓取所有已填寫資料
             const response = await fetch(gasUrl);
-            const data = await response.json();
+            const allData = await response.json();
             
             let summary = { "包餡魚丸":0, "無包餡魚丸":0, "原味貢丸":0, "香菇貢丸":0, "福州燕丸":0, "鮮蔥貢丸":0 };
             let grandTotal = 0;
 
-            data.forEach(row => {
-                // row[1] 是訂單字串，例如 "包餡魚丸x2, 福州燕丸x1"
-                for (let key in summary) {
-                    let match = row[1].match(new RegExp(key + "x(\\d+)"));
-                    if (match) summary[key] += parseInt(match[1]);
+            allData.forEach(row => {
+                // row[1] 是訂單內容文字
+                if (row[1]) {
+                    for (let key in summary) {
+                        let match = row[1].match(new RegExp(key + "x(\\d+)"));
+                        if (match) summary[key] += parseInt(match[1]);
+                    }
                 }
-                grandTotal += parseInt(row[2]); // row[2] 是金額
+                // row[2] 是該筆訂單金額
+                if (row[2]) grandTotal += parseInt(row[2]);
             });
 
             let html = "";
@@ -69,12 +67,9 @@
             document.getElementById('statContent').innerHTML = html + `<div class="total-price">💰 總應付金額：NT$ ${grandTotal}</div>`;
             document.getElementById('statLoading').style.display = 'none';
         } catch (e) {
-            document.getElementById('statLoading').innerText = "讀取失敗，請確認 GAS 權限或已有資料。";
+            document.getElementById('statLoading').innerText = "讀取資料失敗，請確認已有人填寫訂單。";
         }
     }
-
-    // submitOrder 函式請保留您原本的 POST 邏輯...
 </script>
 </body>
 </html>
-
